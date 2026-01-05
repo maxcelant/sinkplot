@@ -1,4 +1,4 @@
-# High Level Design
+# Sinkplot
 
 Sinkplot is meant to be a simple to use runtime-configurable reverse-proxy.
 
