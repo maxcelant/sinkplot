@@ -1,8 +1,7 @@
 package config
 
-// NOTE: Revisit this later and find a fitting interface
-
-type v1_ConfigSchema struct {
+type V1_ConfigSchema struct {
+	// TODO: add metadata object here
 	App App `json:"app" yaml:"app"`
 }
 
@@ -23,10 +22,10 @@ type Route struct {
 }
 
 type Matcher struct {
-	Endpoint string   `json:"endpoint" yaml:"endpoint"`
-	Methods  []string `json:"methods" yaml:"methods"`
-	Match    string   `json:"match" yaml:"match"` // exact | prefix
-	Sink     string   `json:"sink" yaml:"sink"`
+	Endpoint string    `json:"endpoint" yaml:"endpoint"`
+	Methods  *[]string `json:"methods,omitempty" yaml:"methods,omitempty"`
+	Match    *string   `json:"match,omitempty" yaml:"match,omitempty"` // exact | prefix | regex, defaults to exact
+	Sink     string    `json:"sink" yaml:"sink"`
 }
 
 type Sink struct {
@@ -37,5 +36,5 @@ type Sink struct {
 type Upstream struct {
 	Address string `json:"address" yaml:"address"`
 	Port    int    `json:"port" yaml:"port"`
-	Weight  int    `json:"weight" yaml:"weight"`
+	Weight  *int   `json:"weight,omitempty" yaml:"weight,omitempty"`
 }
