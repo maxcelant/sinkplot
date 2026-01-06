@@ -1,8 +1,7 @@
 package start
 
 import (
-	"fmt"
-
+	"github.com/maxcelant/sinkplot/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -16,5 +15,5 @@ func NewCommand() *cobra.Command {
 }
 
 func runStart(cmd *cobra.Command, args []string) {
-	fmt.Println("hello world")
+	config.Load()
 }
