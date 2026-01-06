@@ -18,7 +18,6 @@ func Load() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(cfg.App.Name)
 	compileHandlerChain(cfg.App.Routes)
 }
 
