@@ -1,6 +1,13 @@
 package start
 
 import (
+	"context"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/maxcelant/sinkplot/internal/config"
 	"github.com/spf13/cobra"
 )
@@ -15,5 +22,30 @@ func NewCommand() *cobra.Command {
 }
 
 func runStart(cmd *cobra.Command, args []string) {
-	config.Load()
+	chain, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("starting server on 8080")
+	srv := http.Server{
+		Addr:    ":8080",
+		Handler: chain,
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Println("shutting down...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	srv.Shutdown(shutdownCtx)
+
 }

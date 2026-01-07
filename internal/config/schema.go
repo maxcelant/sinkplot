@@ -17,11 +17,6 @@ type App struct {
 }
 
 type Route struct {
-	Name     string    `json:"name" yaml:"name"`
-	Matchers []Matcher `json:"matchers" yaml:"matchers"`
-}
-
-type Matcher struct {
 	Endpoint string    `json:"endpoint" yaml:"endpoint"`
 	Methods  *[]string `json:"methods,omitempty" yaml:"methods,omitempty"`
 	Match    *string   `json:"match,omitempty" yaml:"match,omitempty"` // exact | prefix | regex, defaults to exact

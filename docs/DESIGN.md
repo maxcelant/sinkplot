@@ -22,20 +22,18 @@ app:
   - 8080
   - 8081
   routes:
-  - name: product-backend
-    matchers:
-    - endpoint: /backend/pay
-      methods: ['GET', 'POST'] 
-      match: exact
-      sink: payments
-    - endpoint: /backend/v2
-      methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'] 
-      match: prefix
-      sink: v2
-    - endpoint: /backend
-      methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'] 
-      match: prefix
-      sink: v1
+  - endpoint: /backend/pay
+    methods: ['GET', 'POST'] 
+    match: exact
+    sink: payments
+  - endpoint: /backend/v2
+    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'] 
+    match: prefix
+    sink: v2
+  - endpoint: /backend
+    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'] 
+    match: prefix
+    sink: v1
   sinks:
   - name: v1
     upstreams:
