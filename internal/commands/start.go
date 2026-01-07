@@ -2,6 +2,7 @@ package start
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -27,23 +28,25 @@ func NewCommand() *cobra.Command {
 
 func runStart(cmd *cobra.Command, args []string) {
 	var cfg schema.Config
-	buf, err := os.ReadFile("tests/sample_01.yaml")
+	path, err := cmd.Flags().GetString("path")
 	if err != nil {
-		log.Fatalf("failed to read file: %w", err)
+		log.Fatal(fmt.Errorf("failed to find valid Sinkfile path: %w", err))
+	}
+	buf, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatal(fmt.Errorf("failed to read file: %w", err))
 	}
 	err = yaml.Unmarshal(buf, &cfg)
 	if err != nil {
-		log.Fatalf("failed to unmarshal config to yaml: %w", err)
+		log.Fatal(fmt.Errorf("failed to unmarshal config to yaml: %w", err))
 	}
-	chain, err := routes.Compile(cfg.App)
+	log.Printf("loading initial config @ '%s'", path)
+	h, err := routes.Compile(cfg.App)
 	if err != nil {
-		log.Fatalf("failed to load the initial config: %w", err)
+		log.Fatal(fmt.Errorf("failed to load the initial config: %w", err))
 	}
-	dh := runtime.NewDynamicHandler(chain)
-	workerSrv := http.Server{
-		Addr:    ":8080",
-		Handler: dh,
-	}
+	dh := runtime.NewDynamicHandler(h)
+	workerSrv := runtime.NewWorkerServer(dh)
 	ctrlSrv := ctrl.NewServer(dh)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

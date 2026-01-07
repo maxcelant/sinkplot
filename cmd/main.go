@@ -11,7 +11,9 @@ import (
 var rootCmd = &cobra.Command{Use: "sinkctl"}
 
 func init() {
-	rootCmd.AddCommand(start.NewCommand())
+	startCmd := start.NewCommand()
+	startCmd.Flags().String("path", "Sinkfile", "path to the initial Sinkfile config")
+	rootCmd.AddCommand(startCmd)
 }
 
 func main() {
