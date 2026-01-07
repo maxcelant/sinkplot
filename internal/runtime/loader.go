@@ -1,4 +1,4 @@
-package config
+package runtime
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"os"
 	"slices"
 
+	"github.com/maxcelant/sinkplot/internal/schema"
 	"gopkg.in/yaml.v3"
 )
 
@@ -21,7 +22,7 @@ func (RouteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func Load() (http.Handler, error) {
-	var cfg V1_ConfigSchema
+	var cfg schema.Config
 	buf, err := os.ReadFile("tests/sample_01.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
@@ -38,10 +39,10 @@ func Load() (http.Handler, error) {
 	return chain, nil
 }
 
-func compileRouteHandlers(app App) ([]RouteHandler, error) {
+func compileRouteHandlers(app schema.App) ([]RouteHandler, error) {
 	handlers := make([]RouteHandler, len(app.Routes))
 	for _, r := range app.Routes {
-		i := slices.IndexFunc(app.Sinks, func(sink Sink) bool {
+		i := slices.IndexFunc(app.Sinks, func(sink schema.Sink) bool {
 			return sink.Name == r.Sink
 		})
 		if i == -1 {

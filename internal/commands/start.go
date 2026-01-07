@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/maxcelant/sinkplot/internal/config"
+	"github.com/maxcelant/sinkplot/internal/runtime"
 	"github.com/spf13/cobra"
 )
 
@@ -22,13 +22,17 @@ func NewCommand() *cobra.Command {
 }
 
 func runStart(cmd *cobra.Command, args []string) {
-	chain, err := config.Load()
+	chain, err := runtime.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("starting server on 8080")
-	srv := http.Server{
+	workerSrv := http.Server{
 		Addr:    ":8080",
+		Handler: chain,
+	}
+	ctrlSrv := http.Server{
+		Addr:    ":8443",
 		Handler: chain,
 	}
 
@@ -36,7 +40,12 @@ func runStart(cmd *cobra.Command, args []string) {
 	defer stop()
 
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := workerSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+	go func() {
+		if err := ctrlSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
 	}()
@@ -46,6 +55,6 @@ func runStart(cmd *cobra.Command, args []string) {
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	srv.Shutdown(shutdownCtx)
+	workerSrv.Shutdown(shutdownCtx)
 
 }

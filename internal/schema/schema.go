@@ -1,6 +1,6 @@
-package config
+package schema
 
-type V1_ConfigSchema struct {
+type Config struct {
 	// TODO: add metadata object here
 	App App `json:"app" yaml:"app"`
 }
