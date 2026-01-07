@@ -17,10 +17,10 @@ type App struct {
 }
 
 type Route struct {
-	Endpoint string    `json:"endpoint" yaml:"endpoint"`
-	Methods  *[]string `json:"methods,omitempty" yaml:"methods,omitempty"`
-	Match    *string   `json:"match,omitempty" yaml:"match,omitempty"` // exact | prefix | regex, defaults to exact
-	Sink     string    `json:"sink" yaml:"sink"`
+	Path    string    `json:"path" yaml:"path"`
+	Methods *[]string `json:"methods,omitempty" yaml:"methods,omitempty"`
+	Match   *string   `json:"match,omitempty" yaml:"match,omitempty"` // exact | prefix | regex, defaults to exact
+	Sink    string    `json:"sink" yaml:"sink"`
 }
 
 type Sink struct {

@@ -12,6 +12,7 @@ import (
 // Reverse proxying is just a handler
 type RouteHandler struct {
 	Upstreams []string
+	Matchers  MatcherList
 }
 
 func (RouteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +51,11 @@ func compileRouteHandlers(app App) ([]RouteHandler, error) {
 		for _, u := range app.Sinks[i].Upstreams {
 			upstreams[i] = u.Address
 		}
-		handlers[i] = RouteHandler{Upstreams: upstreams}
+		rh := RouteHandler{
+			Upstreams: upstreams,
+			Matchers:  []Matcher{PathMatcher{Path: r.Path}},
+		}
+		handlers[i] = rh
 	}
 	return handlers, nil
 }
@@ -64,15 +69,16 @@ func compileHandlerChain(routes []RouteHandler) http.Handler {
 	return next
 }
 
-// func wrapRoute(
-
-func wrapRoutes(req RouteHandler) Middleware {
+func wrapRoutes(rh RouteHandler) Middleware {
 	// We need to do it this way because we need to inject some the route matching context in the handler chain
 	return func(next http.Handler) http.Handler {
 		// This is where we need to actually do the routing matches
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// If the request matches this handler, stop the chain and handle the request accordingly.
-			req.ServeHTTP(w, r)
+			if rh.Matchers.Match(*r) {
+				rh.ServeHTTP(w, r)
+				return
+			}
 			// Otherwise, just continue down the chain
 			next.ServeHTTP(w, r)
 		})

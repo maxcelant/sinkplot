@@ -14,4 +14,4 @@ func (m MiddlewareHandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request,
 	m.ServeHTTP(w, r, h)
 }
 
-var emptyHandler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+var emptyHandler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("No matching route found")) })
