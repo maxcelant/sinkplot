@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/maxcelant/sinkplot/internal/routes"
 	"github.com/maxcelant/sinkplot/internal/runtime"
 	"github.com/maxcelant/sinkplot/internal/schema"
 	"gopkg.in/yaml.v3"
@@ -29,7 +30,7 @@ func NewServer(dh *runtime.DynamicHandler) http.Server {
 			return
 		}
 
-		h, err := runtime.Load(cfg)
+		h, err := routes.Compile(cfg.App)
 		if err != nil {
 			http.Error(w, "failed to create new handler chain", http.StatusBadRequest)
 			return

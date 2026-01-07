@@ -8,17 +8,6 @@ import (
 	"github.com/maxcelant/sinkplot/internal/schema"
 )
 
-// Reverse proxying is just a handler
-type Handler struct {
-	Upstreams []string
-	Matchers  MatcherList
-}
-
-func (Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Handle roundtrip of request
-	w.Write([]byte("proxy handler"))
-}
-
 func Compile(app schema.App) (http.Handler, error) {
 	handlers := make([]Handler, len(app.Routes))
 	for _, r := range app.Routes {
@@ -30,7 +19,7 @@ func Compile(app schema.App) (http.Handler, error) {
 		}
 		upstreams := make([]string, len(app.Sinks[i].Upstreams))
 		for _, u := range app.Sinks[i].Upstreams {
-			upstreams[i] = u.Address
+			upstreams[i] = fmt.Sprintf("%s:%d", u.Address, u.Port)
 		}
 		rh := Handler{
 			Upstreams: upstreams,
