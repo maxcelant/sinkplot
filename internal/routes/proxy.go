@@ -1,18 +1,24 @@
 package routes
 
 import (
-	"fmt"
+	"math/rand"
 	"net/http"
 )
 
+type Upstreams struct {
+	SocketAddrs []string
+	Strategy    LoadbalanceStrategy
+}
+
 // Reverse proxying is just a handler
 type Handler struct {
-	Upstreams []string
+	Upstreams Upstreams
 	Matchers  MatcherList
 }
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Handle roundtrip of request
-	msg := fmt.Sprintf("proxy handler: upstreams: %v", h.Upstreams)
-	w.Write([]byte(msg))
+	// Choose an upstream using a strategy
+	// Create a new request
+	// run RoundTrip
+	// Forward response
 }

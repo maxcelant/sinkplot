@@ -17,13 +17,16 @@ func Compile(app schema.App) (http.Handler, error) {
 		if i == -1 {
 			return nil, fmt.Errorf("failed to find sink with name '%s'", r.Sink)
 		}
-		upstreams := make([]string, len(app.Sinks[i].Upstreams))
+		addrs := make([]string, len(app.Sinks[i].Upstreams))
 		for _, u := range app.Sinks[i].Upstreams {
-			upstreams[i] = fmt.Sprintf("%s:%d", u.Address, u.Port)
+			addrs[i] = fmt.Sprintf("%s:%d", u.Address, u.Port)
 		}
 		rh := Handler{
-			Upstreams: upstreams,
-			Matchers:  []Matcher{PathMatcher{Path: r.Path}},
+			Upstreams: Upstreams{
+				SocketAddrs: addrs,
+				Strategy:    RandomStrategy{},
+			},
+			Matchers: []Matcher{PathMatcher{Path: r.Path}},
 		}
 		handlers[i] = rh
 	}
