@@ -1,4 +1,4 @@
-package runtime
+package routes
 
 import "net/http"
 

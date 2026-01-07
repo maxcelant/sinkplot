@@ -1,0 +1,16 @@
+app:
+  name: product-service
+  listeners: 
+  - 8080
+  - 8081
+  routes:
+  - path: /
+    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'] 
+    match: prefix
+    sink: v1
+  sinks:
+  - name: v1
+    upstreams:
+    - address: '127.0.0.1'
+      port: 9001
+      weight: 10

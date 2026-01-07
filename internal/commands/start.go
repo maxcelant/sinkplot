@@ -8,8 +8,12 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/maxcelant/sinkplot/internal/ctrl"
+	"github.com/maxcelant/sinkplot/internal/routes"
 	"github.com/maxcelant/sinkplot/internal/runtime"
+	"github.com/maxcelant/sinkplot/internal/schema"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 func NewCommand() *cobra.Command {
@@ -22,29 +26,36 @@ func NewCommand() *cobra.Command {
 }
 
 func runStart(cmd *cobra.Command, args []string) {
-	chain, err := runtime.Load()
+	var cfg schema.Config
+	buf, err := os.ReadFile("tests/sample_01.yaml")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to read file: %w", err)
 	}
-	log.Println("starting server on 8080")
+	err = yaml.Unmarshal(buf, &cfg)
+	if err != nil {
+		log.Fatalf("failed to unmarshal config to yaml: %w", err)
+	}
+	chain, err := routes.Compile(cfg.App)
+	if err != nil {
+		log.Fatalf("failed to load the initial config: %w", err)
+	}
+	dh := runtime.NewDynamicHandler(chain)
 	workerSrv := http.Server{
 		Addr:    ":8080",
-		Handler: chain,
+		Handler: dh,
 	}
-	ctrlSrv := http.Server{
-		Addr:    ":8443",
-		Handler: chain,
-	}
-
+	ctrlSrv := ctrl.NewServer(dh)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
 	go func() {
+		log.Println("starting worker server on 8080")
 		if err := workerSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
 	}()
 	go func() {
+		log.Println("starting control server on 8443")
 		if err := ctrlSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
@@ -56,5 +67,6 @@ func runStart(cmd *cobra.Command, args []string) {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	workerSrv.Shutdown(shutdownCtx)
+	ctrlSrv.Shutdown(shutdownCtx)
 
 }
