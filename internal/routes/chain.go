@@ -22,15 +22,16 @@ func Compile(app schema.App) (http.Handler, error) {
 			addrs[i] = fmt.Sprintf("%s:%d", u.Address, u.Port)
 		}
 		rh := Handler{
+			Transport: Transport{
+				RoundTripper: http.DefaultTransport,
+			},
 			Upstreams: Upstreams{
-				SocketAddrs: addrs,
-				Strategy:    RandomStrategy{},
+				Strategy: RandomStrategy{addrs},
 			},
 			Matchers: []Matcher{PathMatcher{Path: r.Path}},
 		}
 		handlers[i] = rh
 	}
-
 	// Chain the handlers together
 	next := emptyHandler
 	for _, r := range handlers {

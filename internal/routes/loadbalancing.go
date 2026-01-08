@@ -3,12 +3,14 @@ package routes
 import "math/rand"
 
 type LoadbalanceStrategy interface {
-	Pick([]string) string
+	Pick() string
 }
 
-type RandomStrategy struct{}
+type RandomStrategy struct {
+	Addrs []string
+}
 
-func (rs RandomStrategy) Pick(addrs []string) string {
-	i := rand.Intn(len(addrs))
-	return addrs[i]
+func (rs RandomStrategy) Pick() string {
+	i := rand.Intn(len(rs.Addrs))
+	return rs.Addrs[i]
 }
