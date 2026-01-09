@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/maxcelant/sinkplot/internal/admission"
 	"github.com/maxcelant/sinkplot/internal/ctrl"
 	"github.com/maxcelant/sinkplot/internal/routes"
 	"github.com/maxcelant/sinkplot/internal/runtime"
@@ -41,6 +42,12 @@ func runStart(cmd *cobra.Command, args []string) {
 		log.Fatal(fmt.Errorf("failed to unmarshal config to yaml: %w", err))
 	}
 	log.Printf("loading initial config @ '%s'", path)
+	if err := admission.Default(&cfg.App); err != nil {
+		log.Fatal(fmt.Errorf("failed to default config object: %w", err))
+	}
+	if err := admission.Validate(&cfg.App); err != nil {
+		log.Fatal(fmt.Errorf("failed to validate config object: %w", err))
+	}
 	h, err := routes.Compile(cfg.App)
 	if err != nil {
 		log.Fatal(fmt.Errorf("failed to load the initial config: %w", err))
