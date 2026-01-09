@@ -11,6 +11,6 @@ app:
   sinks:
   - name: v1
     upstreams:
-    - address: '127.0.0.1'
+    - address: 'localhost'
       port: 9000
       weight: 100
