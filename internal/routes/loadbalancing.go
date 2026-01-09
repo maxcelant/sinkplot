@@ -1,6 +1,8 @@
 package routes
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 type LoadbalanceStrategy interface {
 	Pick() string

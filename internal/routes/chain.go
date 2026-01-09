@@ -18,8 +18,8 @@ func Compile(app schema.App) (http.Handler, error) {
 			return nil, fmt.Errorf("failed to find sink with name '%s'", r.Sink)
 		}
 		addrs := make([]string, len(app.Sinks[i].Upstreams))
-		for _, u := range app.Sinks[i].Upstreams {
-			addrs[i] = fmt.Sprintf("%s:%d", u.Address, u.Port)
+		for j, u := range app.Sinks[i].Upstreams {
+			addrs[j] = fmt.Sprintf("%s:%d", u.Address, u.Port)
 		}
 		rh := Handler{
 			Transport: Transport{
