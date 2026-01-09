@@ -17,16 +17,13 @@ func Compile(app schema.App) (http.Handler, error) {
 		if i == -1 {
 			return nil, fmt.Errorf("failed to find sink with name '%s'", r.Sink)
 		}
-		addrs := make([]string, len(app.Sinks[i].Upstreams))
-		for j, u := range app.Sinks[i].Upstreams {
-			addrs[j] = fmt.Sprintf("%s:%d", u.Address, u.Port)
-		}
+		lbStrategy := chooseStrategy(app.Sinks[i].Upstreams)
 		rh := Handler{
 			Transport: Transport{
 				RoundTripper: http.DefaultTransport,
 			},
 			Upstreams: Upstreams{
-				Strategy: RandomStrategy{addrs},
+				Strategy: lbStrategy,
 			},
 			Matchers: []Matcher{PathMatcher{Path: r.Path}},
 		}
@@ -38,6 +35,14 @@ func Compile(app schema.App) (http.Handler, error) {
 		next = wrapRoutes(r)(next)
 	}
 	return next, nil
+}
+
+func chooseStrategy(upstreams []schema.Upstream) LoadbalanceStrategy {
+	addrs := make([]string, len(upstreams))
+	for j, u := range upstreams {
+		addrs[j] = fmt.Sprintf("%s:%d", u.Address, u.Port)
+	}
+
 }
 
 func wrapRoutes(rh Handler) Middleware {
