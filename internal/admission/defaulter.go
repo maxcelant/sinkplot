@@ -17,9 +17,14 @@ func Default(app *schema.App) error {
 	if err := d.setStrategy(); err != nil {
 		return fmt.Errorf("failed to set a default strategy: %w", err)
 	}
+	if err := d.setMatch(); err != nil {
+		return fmt.Errorf("failed to set a default strategy: %w", err)
+	}
 	return nil
 }
 
+// setStrategy sets a default sink strategy based on the sink fields and whether the
+// weight is set for all the upstreams
 func (d *defaulter) setStrategy() error {
 	// Find all the sink objects that have an unset strategy field
 	var missing []struct {
@@ -48,6 +53,16 @@ func (d *defaulter) setStrategy() error {
 			d.app.Sinks[m.index].Strategy = ptr.To("weighted")
 		} else {
 			d.app.Sinks[m.index].Strategy = ptr.To("random")
+		}
+	}
+	return nil
+}
+
+// setMatch sets any unset route matcher to exact
+func (d *defaulter) setMatch() error {
+	for i, route := range d.app.Routes {
+		if route.Match == nil || *route.Match == "" {
+			d.app.Routes[i].Match = ptr.To("exact")
 		}
 	}
 	return nil
