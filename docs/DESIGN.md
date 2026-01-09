@@ -8,8 +8,19 @@ The `App` schema is a simple configuration object that allows you to choose your
 
 - `App` is the high-level container that hosts your various routes that are associated in some way. A good example is like `product-service`.
 - `Listeners` is which ports sinkplot should listen on for requests for a given `App`.
-- `Routes` is basically a multiplexer with different routing rules, called `matchers` to dictate which route to send a request to.
+- `Routes` is basically a multiplexer with different routing rules to dictate which route to send a request to.
+  - `path` - the URL path to match against
+  - `methods` - (optional) list of HTTP methods to match
+  - `match` - (optional) matching strategy: `exact`, `prefix`, or `regex` (defaults to `exact`)
+  - `sink` - the name of the sink to forward matching requests to
 - `Sink` is one or more _upstream_ IP/hosts. These are the actual services you want to forward your request to.
+  - `name` - identifier used by routes to reference this sink
+  - `strategy` - (optional) load balancing strategy (e.g., `random`)
+  - `upstreams` - list of upstream servers
+- `Upstream` represents a single backend server.
+  - `address` - IP or hostname of the upstream
+  - `port` - port number
+  - `weight` - (optional) weight for load balancing
 
 ### Usage
 
@@ -18,29 +29,31 @@ The `App` schema is a simple configuration object that allows you to choose your
 ```yaml
 app:
   name: product-service
-  listeners: 
+  listeners:
   - 8080
   - 8081
   routes:
-  - endpoint: /backend/pay
-    methods: ['GET', 'POST'] 
+  - path: /backend/pay
+    methods: ['GET', 'POST']
     match: exact
     sink: payments
-  - endpoint: /backend/v2
-    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'] 
+  - path: /backend/v2
+    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS']
     match: prefix
     sink: v2
-  - endpoint: /backend
-    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'] 
+  - path: /backend
+    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS']
     match: prefix
     sink: v1
   sinks:
   - name: v1
+    strategy: random
     upstreams:
     - address: '1.0.0.1'
       port: 80
       weight: 10
   - name: v2
+    strategy: random
     upstreams:
     - address: '1.0.0.2'
       port: 80
