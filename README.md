@@ -7,8 +7,8 @@ Check out [DESIGN.md](/docs/DESIGN.md) for more info.
 #### Objectives
 - [x] Add health check
 - [ ] Convert external schema to internal type
-- [ ] Add better config schema validation
-- [ ] Add config defaulting after validation
+- [ ] Add config schema validation
+- [x] Add config defaulting
 - [ ] Make weight matter for upstream picking
 - [ ] Create Server Group to support multiple listeners 
 - [ ] Add config storage and metadata
