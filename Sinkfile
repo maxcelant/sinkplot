@@ -10,6 +10,7 @@ app:
     sink: v1
   sinks:
   - name: v1
+    strategy: 'random'
     upstreams:
     - address: 'localhost'
       port: 9000

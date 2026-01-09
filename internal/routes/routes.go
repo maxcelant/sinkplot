@@ -8,6 +8,7 @@ import (
 	"github.com/maxcelant/sinkplot/internal/schema"
 )
 
+// Compile will create a handler chain based off of the given config schema
 func Compile(app schema.App) (http.Handler, error) {
 	handlers := make([]Handler, len(app.Routes))
 	for _, r := range app.Routes {
@@ -17,7 +18,7 @@ func Compile(app schema.App) (http.Handler, error) {
 		if i == -1 {
 			return nil, fmt.Errorf("failed to find sink with name '%s'", r.Sink)
 		}
-		lbStrategy := chooseStrategy(app.Sinks[i].Upstreams)
+		lbStrategy := pickLoadbalanceStrategy(app.Sinks[i].Upstreams)
 		rh := Handler{
 			Transport: Transport{
 				RoundTripper: http.DefaultTransport,
@@ -37,14 +38,18 @@ func Compile(app schema.App) (http.Handler, error) {
 	return next, nil
 }
 
-func chooseStrategy(upstreams []schema.Upstream) LoadbalanceStrategy {
+// pickLoadbalanceStrategy picks an appropriate loadbalancing strategy based on the fields in the Sinkfile
+func pickLoadbalanceStrategy(upstreams []schema.Upstream) LoadbalanceStrategy {
+	// TODO: revisit once defaulter and validator are complete
 	addrs := make([]string, len(upstreams))
-	for j, u := range upstreams {
-		addrs[j] = fmt.Sprintf("%s:%d", u.Address, u.Port)
+	for i, u := range upstreams {
+		addrs[i] = fmt.Sprintf("%s:%d", u.Address, u.Port)
 	}
+	return RandomStrategy{addrs}
 
 }
 
+// wrapRoutes creates a handler chain to easily perform route matching
 func wrapRoutes(rh Handler) Middleware {
 	// We need to do it this way because we need to inject some the route matching context in the handler chain
 	return func(next http.Handler) http.Handler {
