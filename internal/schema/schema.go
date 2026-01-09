@@ -23,7 +23,7 @@ type Route struct {
 
 type Sink struct {
 	Name      string     `json:"name" yaml:"name"`
-	Strategy  string     `json:"strategy" yaml:"strategy"`
+	Strategy  *string    `json:"strategy,omitempty" yaml:"strategy,omitempty"`
 	Upstreams []Upstream `json:"upstreams" yaml:"upstreams"`
 }
 
