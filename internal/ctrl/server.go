@@ -11,7 +11,15 @@ import (
 )
 
 func NewServer(dh *runtime.DynamicHandler) http.Server {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	})
+
+	mux.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -39,8 +47,9 @@ func NewServer(dh *runtime.DynamicHandler) http.Server {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("successfully updated config"))
 	})
+
 	return http.Server{
 		Addr:    ":8443",
-		Handler: handler,
+		Handler: mux,
 	}
 }
