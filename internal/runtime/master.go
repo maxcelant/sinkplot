@@ -1,16 +1,15 @@
-package ctrl
+package runtime
 
 import (
 	"io"
 	"net/http"
 
 	"github.com/maxcelant/sinkplot/internal/routes"
-	"github.com/maxcelant/sinkplot/internal/runtime"
 	"github.com/maxcelant/sinkplot/internal/schema"
 	"gopkg.in/yaml.v3"
 )
 
-func NewServer(dh *runtime.DynamicHandler) http.Server {
+func setupMasterServer(dh *DynamicHandler) http.Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
