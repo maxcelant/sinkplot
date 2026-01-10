@@ -72,7 +72,7 @@ func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 			w.Write([]byte("successfully updated config"))
 		})
 		return &http.Server{
-			Addr:    ":8443",
+			Addr:    fmt.Sprintf(":%d", *opts.masterPort),
 			Handler: mux,
 		}
 	}()
@@ -104,6 +104,7 @@ func (m *serverManager) Start(initCfg *schema.Config) error {
 		}
 	}()
 
+	// context will block until a signal is triggered / context is cancelled
 	<-m.ctx.Done()
 	return nil
 }
