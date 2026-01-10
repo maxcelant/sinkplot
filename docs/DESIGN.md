@@ -68,7 +68,7 @@ app:
 2. Start sinkplot locally on a port of your choosing.
 
 ```bash
-sinkplot start --port 8443
+sinkctl start --port 8443
 ```
 
 3. Send your configuration to the `/v1/config` endpoint.
