@@ -25,7 +25,7 @@ type Manager interface {
 
 type serverManager struct {
 	ctx     context.Context
-	handler *DynamicHandler
+	handler *dynamicHandler
 	worker  *http.Server
 	master  *http.Server
 }
@@ -34,7 +34,7 @@ func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 	if opts.masterPort == nil || *opts.masterPort == 0 {
 		opts.masterPort = ptr.To(8443)
 	}
-	dh := &DynamicHandler{}
+	dh := &dynamicHandler{}
 	worker := &http.Server{Handler: dh, Addr: ":8080"}
 	master := func() *http.Server {
 		mux := http.NewServeMux()
@@ -67,7 +67,7 @@ func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 				http.Error(w, "failed to create new handler chain", http.StatusBadRequest)
 				return
 			}
-			dh.Update(h)
+			dh.reload(h)
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("successfully updated config"))
 		})
@@ -90,7 +90,7 @@ func (m *serverManager) Start(initCfg *schema.Config) error {
 	if err != nil {
 		return fmt.Errorf("failed to load the initial config: %w", err)
 	}
-	m.handler.Update(h)
+	m.handler.reload(h)
 	go func() {
 		log.Println("starting worker server on 8080")
 		if err := m.worker.ListenAndServe(); err != nil && err != http.ErrServerClosed {
