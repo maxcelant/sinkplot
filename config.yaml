@@ -15,6 +15,3 @@ app:
     - address: 'localhost'
       port: 9000
       weight: 70
-    - address: 'localhost'
-      port: 9001
-      weight: 150

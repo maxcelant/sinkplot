@@ -15,33 +15,33 @@ import (
 	"github.com/maxcelant/sinkplot/internal/runtime"
 	"github.com/maxcelant/sinkplot/internal/schema"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 func NewCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "start",
 		Short: "Start sinkplot proxy in the foreground",
-		Long:  "I'll fill this in later :)",
-		Run:   runStart,
+		Long: `Start the sinkplot reverse proxy in the foreground.
+
+This command loads the configuration from a Sinkfile (YAML or JSON),
+validates it, and starts both the worker server (port 8080) and the
+control server (port 8443). The worker server handles incoming HTTP
+requests and routes them to configured upstreams. The control server
+accepts live configuration updates via POST requests.
+
+Use --path to specify a custom config file location. The proxy runs
+until interrupted (Ctrl+C), then gracefully shuts down.`,
+		Run: runStart,
 	}
 }
 
 func runStart(cmd *cobra.Command, args []string) {
-	var cfg schema.Config
 	path, err := cmd.Flags().GetString("path")
 	if err != nil {
 		log.Fatal(fmt.Errorf("failed to find valid Sinkfile path: %w", err))
 	}
-	buf, err := os.ReadFile(path)
-	if err != nil {
-		log.Fatal(fmt.Errorf("failed to read file: %w", err))
-	}
-	err = yaml.Unmarshal(buf, &cfg)
-	if err != nil {
-		log.Fatal(fmt.Errorf("failed to unmarshal config to yaml: %w", err))
-	}
-	log.Printf("loading initial config @ '%s'", path)
+	cfg, err := schema.Load(path)
+	log.Printf("loading initial config from '%s'", path)
 	if err := admission.Default(&cfg.App); err != nil {
 		log.Fatal(fmt.Errorf("failed to default config object: %w", err))
 	}
