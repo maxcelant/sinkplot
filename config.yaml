@@ -13,5 +13,5 @@ app:
     strategy: 'random'
     upstreams:
     - address: 'localhost'
-      port: 9000
+      port: 9001
       weight: 70

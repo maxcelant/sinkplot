@@ -69,7 +69,8 @@ func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 			}
 			dh.reload(h)
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("successfully updated config"))
+			log.Println("updated configuration")
+			w.Write([]byte("successfully updated config\n"))
 		})
 		return &http.Server{
 			Addr:    fmt.Sprintf(":%d", *opts.masterPort),
@@ -92,13 +93,13 @@ func (m *serverManager) Start(initCfg *schema.Config) error {
 	}
 	m.handler.reload(h)
 	go func() {
-		log.Println("starting worker server on 8080")
+		log.Println("starting worker server on :8080")
 		if err := m.worker.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
 	}()
 	go func() {
-		log.Printf("starting master server on %d", m.master.Addr)
+		log.Printf("starting master server on %s\n", m.master.Addr)
 		if err := m.master.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
