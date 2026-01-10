@@ -35,6 +35,8 @@ func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 		opts.masterPort = ptr.To(8443)
 	}
 	dh := &dynamicHandler{}
+	// NOTE: Since we will want to support 1 or more workers in the future, we will probably need to create a
+	// workergroup object here and make sure they all have the same dynamic handler
 	worker := &http.Server{Handler: dh, Addr: ":8080"}
 	master := func() *http.Server {
 		mux := http.NewServeMux()
