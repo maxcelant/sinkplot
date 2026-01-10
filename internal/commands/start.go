@@ -35,10 +35,14 @@ func runStart(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(fmt.Errorf("failed to find valid Sinkfile path: %w", err))
 	}
-	cfg, err := config.Load(path)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	m := runtime.NewManager(ctx, runtime.ManagerOptions{})
+	// Load the initial config from the given path on startup
+	cfg, err := config.Load(path)
+	if err != nil {
+		log.Fatal(fmt.Errorf("failed to load config: %w", err))
+	}
 	// Start will block until the context is cancelled
 	if err := m.Start(cfg); err != nil {
 		log.Fatal(fmt.Errorf("failed to start server manager: %w", err))
