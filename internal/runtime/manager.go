@@ -30,6 +30,7 @@ type serverManager struct {
 	master  *http.Server
 }
 
+// NewManager creates a new cancellable server manager that manages both the worker group and the config server
 func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 	if opts.masterPort == nil || *opts.masterPort == 0 {
 		opts.masterPort = ptr.To(8443)
