@@ -26,7 +26,7 @@ type Manager interface {
 type serverManager struct {
 	ctx     context.Context
 	handler *dynamicHandler
-	worker  *http.Server
+	workers runnableGroup
 	master  *http.Server
 }
 
@@ -36,10 +36,15 @@ func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 		opts.masterPort = ptr.To(8443)
 	}
 	dh := &dynamicHandler{}
+	manager := &serverManager{
+		ctx:     ctx,
+		handler: dh,
+	}
 	// NOTE: Since we will want to support 1 or more workers in the future, we will probably need to create a
 	// workergroup object here and make sure they all have the same dynamic handler
-	worker := &http.Server{Handler: dh, Addr: ":8080"}
-	master := func() *http.Server {
+	// worker := &http.Server{Handler: manager.handler, Addr: ":8080"}
+	manager.workers := NewWorkerGroup(ctx, dh)
+	manager.master := func() *http.Server {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -81,14 +86,10 @@ func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 		}
 	}()
 
-	return &serverManager{
-		ctx:     ctx,
-		handler: dh,
-		worker:  worker,
-		master:  master,
-	}
+	return manager
 }
 
+// Start takes the initial configuration so that it can create the handler chain and start the worker group
 func (m *serverManager) Start(initCfg *schema.Config) error {
 	h, err := routes.Compile(initCfg.App)
 	if err != nil {
@@ -97,7 +98,7 @@ func (m *serverManager) Start(initCfg *schema.Config) error {
 	m.handler.reload(h)
 	go func() {
 		log.Println("starting worker server on :8080")
-		if err := m.worker.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := m.workers.Start(initCfg.App.Listeners); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
 	}()
@@ -113,6 +114,7 @@ func (m *serverManager) Start(initCfg *schema.Config) error {
 	return nil
 }
 
+// Stop gracefully shuts down the config server and the worker group
 func (m *serverManager) Stop() error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
