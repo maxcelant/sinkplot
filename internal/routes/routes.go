@@ -36,7 +36,7 @@ func Compile(app schema.App) (http.Handler, error) {
 		next = wrapRoutes(r)(next)
 	}
 	// Wrap with logging middleware as the outermost layer
-	return logMiddleware(next), nil
+	return loggerRoute(next), nil
 }
 
 // pickLoadbalanceStrategy picks an appropriate loadbalancing strategy based on the fields in the Sinkfile

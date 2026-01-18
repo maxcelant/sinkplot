@@ -17,7 +17,7 @@ func (rr *responseRecorder) WriteHeader(code int) {
 	rr.ResponseWriter.WriteHeader(code)
 }
 
-var logMiddleware Middleware = func(next http.Handler) http.Handler {
+var loggerRoute Middleware = func(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
