@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	start "github.com/maxcelant/sinkplot/internal/commands"
+	start "github.com/maxcelant/jap/internal/commands"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"

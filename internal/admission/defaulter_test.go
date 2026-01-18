@@ -3,7 +3,7 @@ package admission
 import (
 	"testing"
 
-	"github.com/maxcelant/sinkplot/internal/schema"
+	"github.com/maxcelant/jap/internal/schema"
 	"k8s.io/utils/ptr"
 )
 

@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/maxcelant/sinkplot/internal/admission"
-	"github.com/maxcelant/sinkplot/internal/schema"
+	"github.com/maxcelant/jap/internal/admission"
+	"github.com/maxcelant/jap/internal/schema"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )

@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/maxcelant/sinkplot/internal/config"
-	"github.com/maxcelant/sinkplot/internal/runtime"
+	"github.com/maxcelant/jap/internal/config"
+	"github.com/maxcelant/jap/internal/runtime"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -35,7 +35,7 @@ func runStart(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("failed to find valid Sinkfile path")
 	}
 
-	log.Info().Str("path", path).Msg("starting sinkplot")
+	log.Info().Str("path", path).Msg("starting jap")
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

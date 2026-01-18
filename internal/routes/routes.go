@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"slices"
 
-	"github.com/maxcelant/sinkplot/internal/schema"
+	"github.com/maxcelant/jap/internal/schema"
 )
 
 // Compile will create a handler chain based off of the given config schema
@@ -19,7 +19,7 @@ func Compile(app schema.App) (http.Handler, error) {
 		if i == -1 {
 			return nil, fmt.Errorf("failed to find sink with name '%s'", r.Sink)
 		}
-		lbStrategy := compileRoutingStrategy(app.Sinks[i].Upstreams)
+		lbStrategy := compileRoutingStrategy(app.Sinks[i])
 		matchers, err := compileMatchers(r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to compile matchers: %w", err)
@@ -65,13 +65,51 @@ func compileMatchers(route schema.Route) (MatcherList, error) {
 }
 
 // compileRoutingStrategy picks an appropriate loadbalancing strategy based on the fields in the Sinkfile
-func compileRoutingStrategy(upstreams []schema.Upstream) LoadbalanceStrategy {
-	// TODO: revisit once defaulter and validator are complete
+func compileRoutingStrategy(sink schema.Sink) LoadbalanceStrategy {
+	upstreams := sink.Upstreams
+
+	// Check if explicit strategy is set
+	if sink.Strategy != nil {
+		switch *sink.Strategy {
+		case "weighted":
+			return buildWeightedStrategy(upstreams)
+		case "random":
+			return buildRandomStrategy(upstreams)
+		}
+	}
+
+	// Auto-detect: if any upstream has a weight, use weighted strategy
+	for _, u := range upstreams {
+		if u.Weight != nil {
+			return buildWeightedStrategy(upstreams)
+		}
+	}
+
+	// Default to random strategy
+	return buildRandomStrategy(upstreams)
+}
+
+func buildRandomStrategy(upstreams []schema.Upstream) RandomStrategy {
 	addrs := make([]string, len(upstreams))
 	for i, u := range upstreams {
 		addrs[i] = fmt.Sprintf("%s:%d", u.Address, u.Port)
 	}
 	return RandomStrategy{addrs}
+}
+
+func buildWeightedStrategy(upstreams []schema.Upstream) RandomWeightStrategy {
+	addrWeights := make([]AddrWeight, len(upstreams))
+	for i, u := range upstreams {
+		weight := 1 // default weight
+		if u.Weight != nil {
+			weight = *u.Weight
+		}
+		addrWeights[i] = AddrWeight{
+			Addr:   fmt.Sprintf("%s:%d", u.Address, u.Port),
+			Weight: weight,
+		}
+	}
+	return RandomWeightStrategy{addrWeights}
 }
 
 // wrapRoutes creates a handler chain to easily perform route matching

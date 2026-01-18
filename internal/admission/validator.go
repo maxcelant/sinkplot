@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/maxcelant/sinkplot/internal/schema"
+	"github.com/maxcelant/jap/internal/schema"
 )
 
 type validator struct {

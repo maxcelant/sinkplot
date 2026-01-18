@@ -3,8 +3,8 @@ package store
 import (
 	"fmt"
 
-	schema "github.com/maxcelant/sinkplot/internal/schema"
-	"github.com/maxcelant/sinkplot/pkg/cache"
+	"github.com/maxcelant/jap/internal/schema"
+	"github.com/maxcelant/jap/pkg/cache"
 )
 
 // Store is the in-memory cache for the config objects so they can be quickly found and updated

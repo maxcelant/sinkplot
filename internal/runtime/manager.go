@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/maxcelant/sinkplot/internal/routes"
-	"github.com/maxcelant/sinkplot/internal/schema"
+	"github.com/maxcelant/jap/internal/routes"
+	"github.com/maxcelant/jap/internal/schema"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 	"k8s.io/utils/ptr"
