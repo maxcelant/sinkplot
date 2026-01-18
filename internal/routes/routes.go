@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"slices"
 
 	"github.com/maxcelant/sinkplot/internal/schema"
@@ -18,7 +19,11 @@ func Compile(app schema.App) (http.Handler, error) {
 		if i == -1 {
 			return nil, fmt.Errorf("failed to find sink with name '%s'", r.Sink)
 		}
-		lbStrategy := pickLoadbalanceStrategy(app.Sinks[i].Upstreams)
+		lbStrategy := compileRoutingStrategy(app.Sinks[i].Upstreams)
+		matchers, err := compileMatchers(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compile matchers: %w", err)
+		}
 		rh := Handler{
 			Transport: Transport{
 				RoundTripper: http.DefaultTransport,
@@ -26,7 +31,7 @@ func Compile(app schema.App) (http.Handler, error) {
 			Upstreams: Upstreams{
 				Strategy: lbStrategy,
 			},
-			Matchers: []Matcher{PathMatcher{Path: r.Path}},
+			Matchers: matchers,
 		}
 		handlers[i] = rh
 	}
@@ -39,8 +44,28 @@ func Compile(app schema.App) (http.Handler, error) {
 	return loggerRoute(next), nil
 }
 
-// pickLoadbalanceStrategy picks an appropriate loadbalancing strategy based on the fields in the Sinkfile
-func pickLoadbalanceStrategy(upstreams []schema.Upstream) LoadbalanceStrategy {
+func compileMatchers(route schema.Route) (MatcherList, error) {
+	var ml []Matcher
+	switch route.Path {
+	case "exact":
+		ml = append(ml, PathMatcher{route.Path})
+	case "prefix":
+		ml = append(ml, PrefixMatcher{route.Path})
+	case "regex":
+		re, err := regexp.Compile(route.Path)
+		if err != nil {
+			return ml, fmt.Errorf("failed to turn route path into regex: %w", err)
+		}
+		ml = append(ml, RegexMatcher{re})
+	}
+	if route.Methods != nil && len(*route.Methods) != 0 {
+		ml = append(ml, MethodMatcher{*route.Methods})
+	}
+	return ml, nil
+}
+
+// compileRoutingStrategy picks an appropriate loadbalancing strategy based on the fields in the Sinkfile
+func compileRoutingStrategy(upstreams []schema.Upstream) LoadbalanceStrategy {
 	// TODO: revisit once defaulter and validator are complete
 	addrs := make([]string, len(upstreams))
 	for i, u := range upstreams {
