@@ -94,18 +94,17 @@ func (m *serverManager) Start(initCfg *schema.Config) error {
 	}
 	m.handler.reload(h)
 	go func() {
-		if err := m.workers.Start(initCfg.App.Listeners); err != nil && err != http.ErrServerClosed {
-			log.Fatal().Err(err).Msg("worker server failed")
-		}
-	}()
-	go func() {
 		log.Info().Msgf("starting master server on %s", m.master.Addr)
 		if err := m.master.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal().Err(err).Msg("master server failed")
 		}
 	}()
-
-	// context will block until a signal is triggered / context is cancelled
+	go func() {
+		if err := m.workers.Start(initCfg.App.Listeners); err != nil && err != http.ErrServerClosed {
+			log.Fatal().Err(err).Msg("worker server failed")
+		}
+	}()
+	// Context will block until a signal is triggered / context is cancelled
 	<-m.ctx.Done()
 	return nil
 }

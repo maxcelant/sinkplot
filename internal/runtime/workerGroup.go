@@ -33,7 +33,6 @@ func NewWorkerGroup(dh *dynamicHandler) runnableGroup {
 func (g *workerGroup) Start(listeners []int) error {
 	// Create a http server for every listener port
 	for _, addr := range listeners {
-		log.Info().Msgf("starting worker server on :%d", addr)
 		g.workers = append(g.workers, &http.Server{Handler: g.handler, Addr: fmt.Sprintf(":%d", addr)})
 	}
 	errCh := make(chan error, len(g.workers))
@@ -44,6 +43,7 @@ func (g *workerGroup) Start(listeners []int) error {
 			go func() {
 				defer g.wg.Done()
 				// ListenAndServe will block until signalled by the Stop method
+				log.Info().Msgf("starting worker server on %s", worker.Addr)
 				if err := worker.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 					errCh <- err
 				}

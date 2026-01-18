@@ -35,7 +35,8 @@ func Compile(app schema.App) (http.Handler, error) {
 	for _, r := range handlers {
 		next = wrapRoutes(r)(next)
 	}
-	return next, nil
+	// Wrap with logging middleware as the outermost layer
+	return logMiddleware(next), nil
 }
 
 // pickLoadbalanceStrategy picks an appropriate loadbalancing strategy based on the fields in the Sinkfile
@@ -46,7 +47,6 @@ func pickLoadbalanceStrategy(upstreams []schema.Upstream) LoadbalanceStrategy {
 		addrs[i] = fmt.Sprintf("%s:%d", u.Address, u.Port)
 	}
 	return RandomStrategy{addrs}
-
 }
 
 // wrapRoutes creates a handler chain to easily perform route matching
