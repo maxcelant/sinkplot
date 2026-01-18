@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/maxcelant/sinkplot/internal/routes"
 	"github.com/maxcelant/sinkplot/internal/schema"
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 	"k8s.io/utils/ptr"
 )
@@ -40,11 +40,8 @@ func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 		ctx:     ctx,
 		handler: dh,
 	}
-	// NOTE: Since we will want to support 1 or more workers in the future, we will probably need to create a
-	// workergroup object here and make sure they all have the same dynamic handler
-	// worker := &http.Server{Handler: manager.handler, Addr: ":8080"}
-	manager.workers := NewWorkerGroup(ctx, dh)
-	manager.master := func() *http.Server {
+	manager.workers = NewWorkerGroup(dh)
+	manager.master = func() *http.Server {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -77,7 +74,7 @@ func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 			}
 			dh.reload(h)
 			w.WriteHeader(http.StatusOK)
-			log.Println("updated configuration")
+			log.Info().Msg("updated configuration")
 			w.Write([]byte("successfully updated config\n"))
 		})
 		return &http.Server{
@@ -97,15 +94,14 @@ func (m *serverManager) Start(initCfg *schema.Config) error {
 	}
 	m.handler.reload(h)
 	go func() {
-		log.Println("starting worker server on :8080")
 		if err := m.workers.Start(initCfg.App.Listeners); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+			log.Fatal().Err(err).Msg("worker server failed")
 		}
 	}()
 	go func() {
-		log.Printf("starting master server on %s\n", m.master.Addr)
+		log.Info().Msgf("starting master server on %s", m.master.Addr)
 		if err := m.master.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+			log.Fatal().Err(err).Msg("master server failed")
 		}
 	}()
 
@@ -118,11 +114,11 @@ func (m *serverManager) Start(initCfg *schema.Config) error {
 func (m *serverManager) Stop() error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	log.Println("shutting down...")
+	log.Info().Msg("shutting down gracefully...")
 	if err := m.master.Shutdown(shutdownCtx); err != nil {
 		return fmt.Errorf("failed to shut down master server: %w", err)
 	}
-	if err := m.worker.Shutdown(shutdownCtx); err != nil {
+	if err := m.workers.Shutdown(shutdownCtx); err != nil {
 		return fmt.Errorf("failed to shut down worker server: %w", err)
 	}
 	return nil

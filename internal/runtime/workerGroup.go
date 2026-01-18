@@ -3,17 +3,19 @@ package runtime
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
+
+	"github.com/rs/zerolog/log"
 )
 
 type runnableGroup interface {
-	Start([]string) error
-	Shutdown() error
+	Start([]int) error
+	Shutdown(context.Context) error
 }
 
 type workerGroup struct {
-	ctx     context.Context
 	workers []*http.Server
 	handler *dynamicHandler
 
@@ -21,18 +23,18 @@ type workerGroup struct {
 	once sync.Once
 }
 
-func NewWorkerGroup(ctx context.Context, dh *dynamicHandler) runnableGroup {
+func NewWorkerGroup(dh *dynamicHandler) runnableGroup {
 	return &workerGroup{
-		ctx:     ctx,
 		handler: dh,
 		workers: make([]*http.Server, 0),
 	}
 }
 
-func (g *workerGroup) Start(listeners []string) error {
+func (g *workerGroup) Start(listeners []int) error {
 	// Create a http server for every listener port
 	for _, addr := range listeners {
-		g.workers = append(g.workers, &http.Server{Handler: g.handler, Addr: addr})
+		log.Info().Msgf("starting worker server on :%d", addr)
+		g.workers = append(g.workers, &http.Server{Handler: g.handler, Addr: fmt.Sprintf(":%d", addr)})
 	}
 	errCh := make(chan error, len(g.workers))
 	// Start all the servers
@@ -62,10 +64,10 @@ func (g *workerGroup) Start(listeners []string) error {
 	return nil
 }
 
-func (g *workerGroup) Shutdown() error {
+func (g *workerGroup) Shutdown(shutdownCtx context.Context) error {
 	var errList []error
 	for _, worker := range g.workers {
-		if err := worker.Shutdown(g.ctx); err != nil {
+		if err := worker.Shutdown(shutdownCtx); err != nil {
 			errList = append(errList, err)
 		}
 	}

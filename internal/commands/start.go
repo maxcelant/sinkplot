@@ -2,13 +2,12 @@ package start
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
 
 	"github.com/maxcelant/sinkplot/internal/config"
 	"github.com/maxcelant/sinkplot/internal/runtime"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -33,22 +32,28 @@ until interrupted (Ctrl+C), then gracefully shuts down.`,
 func runStart(cmd *cobra.Command, args []string) {
 	path, err := cmd.Flags().GetString("path")
 	if err != nil {
-		log.Fatal(fmt.Errorf("failed to find valid Sinkfile path: %w", err))
-	}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-	m := runtime.NewManager(ctx, runtime.ManagerOptions{})
-	// Load the initial config from the given path on startup
-	cfg, err := config.Load(path)
-	if err != nil {
-		log.Fatal(fmt.Errorf("failed to load config: %w", err))
-	}
-	// Start will block until the context is cancelled
-	if err := m.Start(cfg); err != nil {
-		log.Fatal(fmt.Errorf("failed to start server manager: %w", err))
-	}
-	if err := m.Stop(); err != nil {
-		log.Fatal(fmt.Errorf("failed to stop server manager gracefully: %w", err))
+		log.Fatal().Err(err).Msg("failed to find valid Sinkfile path")
 	}
 
+	log.Info().Str("path", path).Msg("starting sinkplot")
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	m := runtime.NewManager(ctx, runtime.ManagerOptions{})
+
+	cfg, err := config.Load(path)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to load config")
+	}
+	log.Info().Int("routes", len(cfg.App.Routes)).Int("sinks", len(cfg.App.Sinks)).Msg("config loaded")
+
+	if err := m.Start(cfg); err != nil {
+		log.Fatal().Err(err).Msg("failed to start server manager")
+	}
+
+	if err := m.Stop(); err != nil {
+		log.Fatal().Err(err).Msg("failed to stop server manager gracefully")
+	}
+	log.Info().Msg("shutdown complete")
 }

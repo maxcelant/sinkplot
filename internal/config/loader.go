@@ -3,12 +3,12 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/maxcelant/sinkplot/internal/admission"
 	"github.com/maxcelant/sinkplot/internal/schema"
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -17,7 +17,7 @@ func Load(path string) (cfg *schema.Config, err error) {
 		return nil, fmt.Errorf("config file does not exist: %s", path)
 	}
 
-	log.Printf("loading initial config from '%s'", path)
+	log.Info().Msgf("loading initial config from '%s'", path)
 	buf, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
