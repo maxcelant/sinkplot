@@ -14,8 +14,8 @@ import (
 func NewCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "start",
-		Short: "Start sinkplot proxy in the foreground",
-		Long: `Start the sinkplot reverse proxy in the foreground.
+		Short: "Start the reverse proxy in the foreground",
+		Long: `Start the reverse proxy in the foreground.
 
 This command loads the configuration from a config file (YAML or JSON),
 validates it, and starts both the worker server (port 8080) and the

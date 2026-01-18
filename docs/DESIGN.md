@@ -1,13 +1,13 @@
 # High Level Design
 
-Sinkplot is meant to be a simple to use runtime-configurable reverse-proxy.
+Jap is meant to be a simple to use runtime-configurable reverse-proxy.
 
 The `App` schema is a simple configuration object that allows you to choose your listeners, routes and sinks.
 
 ### Terminology
 
 - `App` is the high-level container that hosts your various routes that are associated in some way. A good example is like `product-service`.
-- `Listeners` is which ports sinkplot should listen on for requests for a given `App`.
+- `Listeners` is which ports jap should listen on for requests for a given `App`.
 - `Routes` is basically a multiplexer with different routing rules to dictate which route to send a request to.
   - `path` - the URL path to match against
   - `methods` - (optional) list of HTTP methods to match
@@ -65,10 +65,10 @@ app:
       weight: 10
 ```
 
-2. Start sinkplot locally on a port of your choosing.
+2. Start jap locally on a port of your choosing.
 
 ```bash
-sinkctl start --port 8443
+jap start --port 8443
 ```
 
 3. Send your configuration to the `/v1/config` endpoint.
@@ -79,7 +79,7 @@ curl -XPOST localhost:8443/v1/config \
   --data-binary @config.yaml
 ```
 
-4. Now that the configuration was accepted, you can try to use sinkplot to hit one of your registered routes (assuming you have that backend actually running somewhere).
+4. Now that the configuration was accepted, you can try to use jap to hit one of your registered routes (assuming you have that backend actually running somewhere).
 
 ```bash
 curl -XGET localhost:8080/backend/pay

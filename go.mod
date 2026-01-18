@@ -3,7 +3,6 @@ module github.com/maxcelant/jap
 go 1.25.5
 
 require (
-	github.com/maxcelant/sinkplot v0.0.0-20260118042622-94d1a02efc45
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.10.2
 	gopkg.in/yaml.v3 v3.0.1
