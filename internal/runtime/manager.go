@@ -48,7 +48,7 @@ func NewManager(ctx context.Context, opts ManagerOptions) Manager {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"status":"ok"}`))
 		})
-		mux.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
+		mux.HandleFunc("/v1/config", func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != http.MethodPost {
 				http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 				return
