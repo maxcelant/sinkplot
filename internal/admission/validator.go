@@ -23,6 +23,16 @@ var validMatches = map[string]bool{
 	"regex":  true,
 }
 
+var validMethods = map[string]bool{
+	"GET":     true,
+	"POST":    true,
+	"PUT":     true,
+	"DELETE":  true,
+	"PATCH":   true,
+	"HEAD":    true,
+	"OPTIONS": true,
+}
+
 // Validate ensures that all necessary fields are set and are correct
 func Validate(app *schema.App) error {
 	d := validator{app}
@@ -39,10 +49,18 @@ func Validate(app *schema.App) error {
 	if err := d.validateIP(); err != nil {
 		return fmt.Errorf("upstream IP validation failed: %w", err)
 	}
-	// Validate the methods for all the routes
-	// Validate listener ports
-	// Validate that route -> sink are valid
-	// Validate route paths
+	if err := d.validateMethods(); err != nil {
+		return fmt.Errorf("route methods validation failed: %w", err)
+	}
+	if err := d.validateListenerPorts(); err != nil {
+		return fmt.Errorf("listener ports validation failed: %w", err)
+	}
+	if err := d.validateRouteSinks(); err != nil {
+		return fmt.Errorf("route sink validation failed: %w", err)
+	}
+	if err := d.validateRoutePaths(); err != nil {
+		return fmt.Errorf("route path validation failed: %w", err)
+	}
 	return nil
 }
 
@@ -95,6 +113,57 @@ func (v validator) validateIP() error {
 			if ip := net.ParseIP(u.Address); ip == nil {
 				return fmt.Errorf("invalid IP address %q in sink %q", u.Address, s.Name)
 			}
+		}
+	}
+	return nil
+}
+
+func (v validator) validateMethods() error {
+	for _, r := range v.app.Routes {
+		if r.Methods == nil {
+			continue
+		}
+		for _, m := range *r.Methods {
+			if !validMethods[m] {
+				return fmt.Errorf("invalid HTTP method %q in route %q", m, r.Path)
+			}
+		}
+	}
+	return nil
+}
+
+func (v validator) validateListenerPorts() error {
+	for _, port := range v.app.Listeners {
+		if port < 1 || port > 65535 {
+			return fmt.Errorf("invalid listener port %d", port)
+		}
+	}
+	return nil
+}
+
+func (v validator) validateRouteSinks() error {
+	sinkNames := make(map[string]bool)
+	for _, s := range v.app.Sinks {
+		sinkNames[s.Name] = true
+	}
+	for _, r := range v.app.Routes {
+		if r.Sink == "" {
+			return fmt.Errorf("route %q has no sink specified", r.Path)
+		}
+		if !sinkNames[r.Sink] {
+			return fmt.Errorf("route %q references unknown sink %q", r.Path, r.Sink)
+		}
+	}
+	return nil
+}
+
+func (v validator) validateRoutePaths() error {
+	for _, r := range v.app.Routes {
+		if r.Path == "" {
+			return fmt.Errorf("route path cannot be empty")
+		}
+		if r.Path[0] != '/' {
+			return fmt.Errorf("route path %q must start with /", r.Path)
 		}
 	}
 	return nil
